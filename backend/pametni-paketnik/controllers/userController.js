@@ -120,50 +120,59 @@ module.exports = {
         });
     },
 
-    renderLogin: function (req, res) {
-        res.render('login', { title: 'Login' });  // Make sure 'login.hbs' is correctly set up in your views folder.
+    register: async function (req, res) {
+        try {
+            const { username, email, password } = req.body;
+            // Check if the email or username already exists
+            const existingUser = await UserModel.findOne({ $or: [{ email }, { username }] });
+            if (existingUser) {
+                return res.status(400).json({ message: "Email or username already exists" });
+            }
+            // Create a new user
+            const newUser = new UserModel({ username, email, password });
+            await newUser.save();
+            return res.status(201).json({ message: "Registration successful" });
+        } catch (error) {
+            console.error("Error during registration:", error);
+            return res.status(500).json({ message: "Registration failed" });
+        }
     },
 
-    login: async function (req, res) {
-        var username = req.body.username;
-        var password = req.body.password;
-    
+    login: async function(req, res, next) {
         try {
-            let user = await UserModel.findOne({ username: username });
-    
-            // If user doesn't exist, create a new user
+            const user = await UserModel.authenticate(req.body.username, req.body.password);
+            req.session.userId = user._id; // Make sure this line only runs if user is not null
+            return res.json(user);
+        } catch (error) {
+            console.error("Login error:", error.message);
+            return res.status(401).send({ error: 'Login failed' });
+        }
+    },      
+
+    profile: async function(req, res, next) {
+        try {
+            const user = await UserModel.findById(req.session.userId);
             if (!user) {
-                user = new UserModel({
-                    username: username,
-                    password: password, // Consider hashing the password before saving
-                    email: req.body.email // Assuming you might want to collect email during registration
-                });
-    
-                await user.save();
-                return res.json({
-                    message: 'Registration successful, and you are now logged in!',
-                    user: user
-                });
+                const err = new Error('Not authorized, go back!');
+                err.status = 400;
+                throw err;
             }
-    
-            // Check if the password matches (assuming passwords are hashed, this part will need a proper check)
-            if (user.password !== password) {
-                return res.status(401).json({
-                    message: 'Password incorrect'
-                });
-            }
-    
-            // If the user exists and the password matches
-            return res.json({
-                message: 'Login successful!',
-                user: user
-            });
-    
-        } catch (err) {
-            return res.status(500).json({
-                message: 'Error processing your login/registration.',
-                error: err
+            return res.json(user);
+        } catch (error) {
+            return next(error);
+        }
+    },    
+
+    logout: function(req, res, next){
+        if(req.session){
+            req.session.destroy(function(err){
+                if(err){
+                    return next(err);
+                } else{
+                    //return res.redirect('/');
+                    return res.status(201).json({});
+                }
             });
         }
-    }    
+    }
 };
