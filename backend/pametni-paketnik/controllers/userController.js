@@ -1,4 +1,5 @@
 var UserModel = require('../models/userModel.js');
+const bcrypt = require('bcrypt');
 
 /**
  * userController.js
@@ -41,7 +42,7 @@ module.exports = {
             });
         }
     },
-    
+
 
     /**
      * userController.create()
@@ -88,7 +89,7 @@ module.exports = {
             user.username = req.body.username ? req.body.username : user.username;
 			user.email = req.body.email ? req.body.email : user.email;
 			user.password = req.body.password ? req.body.password : user.password;
-			
+
             user.save(function (err, user) {
                 if (err) {
                     return res.status(500).json({
@@ -147,7 +148,7 @@ module.exports = {
             console.error("Login error:", error.message);
             return res.status(401).send({ error: 'Login failed' });
         }
-    },      
+    },
 
     profile: async function(req, res, next) {
         try {
@@ -161,7 +162,7 @@ module.exports = {
         } catch (error) {
             return next(error);
         }
-    },    
+    },
 
     logout: function(req, res, next){
         if(req.session){
@@ -174,5 +175,30 @@ module.exports = {
                 }
             });
         }
+    },
+
+
+
+    changePassword: async function(req, res, next) {
+        try {
+            const { currentPassword, newPassword } = req.body;
+            const user = await UserModel.findById(req.session.userId);
+            if (!user) {
+                return res.status(400).json({ message: 'User not found' });
+            }
+            const match = await bcrypt.compare(currentPassword, user.password);
+            if (!match) {
+                return res.status(400).json({ message: 'Current password is incorrect it is ' + user.password });
+            }
+            user.password = newPassword;
+            await user.save();
+            return res.status(200).json({ message: 'Password updated successfully' });
+        } catch (error) {
+            console.error("Error changing password:", error);
+            return res.status(500).json({ message: "Password change failed" });
+        }
     }
+
+
+
 };
