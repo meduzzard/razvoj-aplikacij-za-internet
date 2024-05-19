@@ -7,6 +7,7 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import Profile from "./components/Profile";
 import Logout from "./components/Logout";
+import DodajPaketnik from "./components/DodajPaketnik";
 
 function App() {
   /**
@@ -43,6 +44,7 @@ function App() {
             <Route path="/register" element={<Register />}></Route>
             <Route path="/profile" element={<Profile />}></Route>
             <Route path="/logout" element={<Logout />}></Route>
+            <Route path="/dodaj-paketnik" element={<DodajPaketnik />}></Route>
           </Routes>
         </div>
       </UserContext.Provider>
