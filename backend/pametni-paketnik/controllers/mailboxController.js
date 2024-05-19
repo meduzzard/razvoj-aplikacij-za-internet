@@ -1,3 +1,4 @@
+// backend/pametni-paketnik/controllers/mailboxController.js
 var MailboxModel = require('../models/mailboxModel.js');
 
 /**
@@ -50,23 +51,28 @@ module.exports = {
     /**
      * mailboxController.create()
      */
-    create: function (req, res) {
-        var mailbox = new MailboxModel({
-			owner : req.body.owner,
-			last_opened : req.body.last_opened
-        });
+    /**
+     * mailboxController.create()
+     */
+    create: async function (req, res) {
+        try {
+            var mailbox = new MailboxModel({
+                owner: 'tbd', // Set owner as 'tbd'
+                last_opened: new Date()
+            });
 
-        mailbox.save(function (err, mailbox) {
-            if (err) {
-                return res.status(500).json({
-                    message: 'Error when creating mailbox',
-                    error: err
-                });
-            }
+            const savedMailbox = await mailbox.save(); // Save the mailbox
 
-            return res.status(201).json(mailbox);
-        });
+            return res.status(201).json(savedMailbox);
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Error when creating mailbox',
+                error: error.message
+            });
+        }
     },
+
+
 
     /**
      * mailboxController.update()
@@ -89,8 +95,8 @@ module.exports = {
             }
 
             mailbox.owner = req.body.owner ? req.body.owner : mailbox.owner;
-			mailbox.last_opened = req.body.last_opened ? req.body.last_opened : mailbox.last_opened;
-			
+            mailbox.last_opened = req.body.last_opened ? req.body.last_opened : mailbox.last_opened;
+
             mailbox.save(function (err, mailbox) {
                 if (err) {
                     return res.status(500).json({
