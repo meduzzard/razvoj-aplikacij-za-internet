@@ -1,9 +1,9 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var mailboxSchema = new Schema({
-    owner: String, // Change to String to store the username directly
-    last_opened: Date,
+const mailboxSchema = new Schema({
+    owner: { type: String, required: true }, // Ensure owner is required
+    last_opened: { type: Date, default: null },
     unlock_history: [{
         user: { type: Schema.Types.ObjectId, ref: 'user' },
         timestamp: Date

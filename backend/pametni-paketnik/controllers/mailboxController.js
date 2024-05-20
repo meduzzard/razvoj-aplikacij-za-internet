@@ -11,18 +11,21 @@ module.exports = {
     /**
      * mailboxController.list()
      */
-    list: function (req, res) {
-        MailboxModel.find(function (err, mailboxes) {
-            if (err) {
-                return res.status(500).json({
-                    message: 'Error when getting mailboxes.',
-                    error: err
-                });
-            }
-
+    list: async function (req, res) {
+        console.log('Fetching mailboxes...');
+        try {
+            const mailboxes = await MailboxModel.find(); // Use await here
+            console.log('Mailboxes fetched successfully:', mailboxes);
             return res.json(mailboxes);
-        });
+        } catch (err) {
+            console.error('Error when getting mailboxes:', err); // Log the error
+            return res.status(500).json({
+                message: 'Error when getting mailboxes.',
+                error: err
+            });
+        }
     },
+    
 
     /**
      * mailboxController.show()
@@ -69,7 +72,7 @@ module.exports = {
     
             var mailbox = new MailboxModel({
                 owner: user.username, // Store the username directly
-
+                last_opened: null 
             });
     
             const savedMailbox = await mailbox.save(); // Save the mailbox
@@ -135,5 +138,41 @@ module.exports = {
 
             return res.status(204).json();
         });
-    }
+    },
+
+    unlock: async function (req, res) {
+        var id = req.params.id;
+
+        try {
+            const mailbox = await MailboxModel.findById(id);
+            if (!mailbox) {
+                return res.status(404).json({
+                    message: 'No such mailbox'
+                });
+            }
+
+            const userId = req.session.userId; // Get the userId from the session
+            if (!userId) {
+                return res.status(401).json({
+                    message: 'Unauthorized: No user logged in'
+                });
+            }
+
+            const currentDate = new Date();
+
+            mailbox.last_opened = currentDate;
+            mailbox.unlock_history.push({
+                user: userId,
+                timestamp: currentDate
+            });
+
+            const updatedMailbox = await mailbox.save();
+            return res.json(updatedMailbox);
+        } catch (err) {
+            return res.status(500).json({
+                message: 'Error when unlocking the mailbox.',
+                error: err
+            });
+        }
+    },
 };

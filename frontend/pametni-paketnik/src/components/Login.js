@@ -8,7 +8,7 @@ function Login(){
     const [error, setError] = useState("");
     const userContext = useContext(UserContext); 
 
-    async function Login(e){
+    async function handleLogin(e){
         e.preventDefault();
         const res = await fetch("http://localhost:3001/users/login", {
             method: "POST",
@@ -30,14 +30,28 @@ function Login(){
     }
 
     return (
-        <form onSubmit={Login}>
+        <form onSubmit={handleLogin}>
             {userContext.user ? <Navigate replace to="/" /> : ""}
-            <input type="text" name="username" placeholder="Username"
-             value={username} onChange={(e)=>(setUsername(e.target.value))}/>
-             <input type="password" name="password" placeholder="Password"
-             value={password} onChange={(e)=>(setPassword(e.target.value))}/>
-             <input type="submit" name="submit" value="Login"/>
-             <label>{error}</label>
+            <input 
+                type="text" 
+                name="username" 
+                placeholder="Username"
+                value={username} 
+                onChange={(e) => setUsername(e.target.value)} 
+            />
+            <input 
+                type="password" 
+                name="password" 
+                placeholder="Password"
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+            />
+            <input type="submit" name="submit" value="Login" />
+            <label> {error}</label>
+            <label>or </label>
+            <button type="button" onClick={() => alert('Face ID login not yet implemented')}>
+                Login with Face ID
+            </button>
         </form>
     );
 }
