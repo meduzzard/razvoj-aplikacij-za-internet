@@ -1,6 +1,0 @@
-{
-    "extension": ["mjs"],
-    "spec": "tests/**/*.mjs",
-    "require": "esm"
-  }
-  
