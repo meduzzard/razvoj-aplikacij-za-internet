@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node ./bin/www.mjs",
-    "test": "mocha -r esm"
+    "test": "mocha --experimental-modules"
   },
   "dependencies": {
     "axios": "^1.7.1",
