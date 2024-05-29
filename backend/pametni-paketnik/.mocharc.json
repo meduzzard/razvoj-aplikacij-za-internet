@@ -1,0 +1,6 @@
+{
+    "require": "esm",
+    "extension": ["mjs"],
+    "spec": "tests/**/*.mjs"
+}
+  
