@@ -1,10 +1,10 @@
-// backend/pametni-paketnik/middleware/authMiddleware.js
-function isAuthenticated(req, res, next) {
+const isAuthenticated = (req, res, next) => {
     if (req.session && req.session.userId) {
-        return next();
+      return next();
     } else {
-        return res.status(401).json({ message: 'Unauthorized' });
+      return res.status(401).send({ error: 'Unauthorized' });
     }
-}
-
-module.exports = isAuthenticated;
+  };
+  
+  export default isAuthenticated;
+  

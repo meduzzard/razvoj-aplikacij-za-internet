@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import mailboxController from '../controllers/mailboxController.js';
+import isAuthenticated from '../middleware/authMiddleware.js';
+
 const router = express.Router();
-const mailboxController = require('../controllers/mailboxController.js');
-const isAuthenticated = require('../middleware/authMiddleware.js');
 
 /*
  * GET
@@ -33,4 +34,4 @@ router.delete('/:id', isAuthenticated, mailboxController.remove);
  */
 router.put('/unlockMailbox/:id', isAuthenticated, mailboxController.unlock);
 
-module.exports = router;
+export default router;

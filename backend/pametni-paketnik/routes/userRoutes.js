@@ -1,10 +1,11 @@
-var express = require('express');
-var router = express.Router();
-var userController = require('../controllers/userController.js');
+import express from 'express';
+import userController from '../controllers/userController.js';
+
+const router = express.Router();
 
 router.get('/', userController.list);
 router.get('/profile', userController.profile);
-//router.get('/login', userController.renderLogin); //vrstni red pomemben (login pred show --> ker rabi user_id)
+// router.get('/login', userController.renderLogin); //vrstni red pomemben (login pred show --> ker rabi user_id)
 router.get('/:id', userController.show);
 router.post('/', userController.create);
 router.post('/register', userController.register);
@@ -13,7 +14,4 @@ router.put('/:id', userController.update);
 router.post('/change-password', userController.changePassword);
 router.delete('/:id', userController.remove);
 
-
-
-
-module.exports = router;
+export default router;
