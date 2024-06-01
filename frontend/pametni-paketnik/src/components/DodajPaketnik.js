@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix Leaflet's default icon issue with Webpack
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
+    iconUrl: require('leaflet/dist/images/marker-icon.png'),
+    shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+});
 
 function DodajPaketnik() {
     const [mailboxes, setMailboxes] = useState([]);
@@ -60,6 +71,23 @@ function DodajPaketnik() {
                     </li>
                 ))}
             </ul>
+
+            <h2>Map of mailboxes</h2>
+            <MapContainer center={[46.5598, 15.6385]} zoom={13} style={{ height: "500px", width: "100%" }}>
+                <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
+                {mailboxes.map(mailbox => (
+                    mailbox.latitude && mailbox.longitude ? (
+                        <Marker key={mailbox._id} position={[mailbox.latitude, mailbox.longitude]}>
+                            <Popup>
+                                <span>ID Mailbox: {mailbox._id}</span>
+                            </Popup>
+                        </Marker>
+                    ) : null
+                ))}
+            </MapContainer>
         </div>
     );
 }
