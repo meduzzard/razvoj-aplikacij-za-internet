@@ -1,10 +1,31 @@
-version: '3'
+version: '3.8'
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
-      - "5000:3000"
+      - "5000:3001"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./backend/pametni-paketnik:/app/pametni-paketnik
+      - /app/pametni-paketnik/node_modules # Ensure node_modules are not overridden
   frontend:
-    build: ./frontend
+    build: ./frontend/pametni-paketnik
     ports:
       - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./frontend/pametni-paketnik:/app
+      - /app/node_modules # Ensure node_modules are not overridden
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:

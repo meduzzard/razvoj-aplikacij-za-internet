@@ -2,13 +2,13 @@ import { useContext, useState } from 'react';
 import { UserContext } from '../userContext';
 import { Navigate } from 'react-router-dom';
 
-function Login(){
+function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const userContext = useContext(UserContext); 
 
-    async function handleLogin(e){
+    async function handleLogin(e) {
         e.preventDefault();
         const res = await fetch("http://localhost:3001/users/login", {
             method: "POST",
@@ -28,6 +28,22 @@ function Login(){
             setError("Invalid username or password");
         }
     }
+
+    const handleFaceIDLogin = async () => {
+        try {
+            const res = await fetch("http://localhost:3001/api/launch-app", {
+                method: "POST"
+            });
+            const data = await res.json();
+            if (data.message) {
+                console.log(data.message);
+            } else if (data.error) {
+                console.error(data.error);
+            }
+        } catch (error) {
+            console.error("Error launching app:", error);
+        }
+    };
 
     return (
         <form onSubmit={handleLogin}>
@@ -49,7 +65,7 @@ function Login(){
             <input type="submit" name="submit" value="Login" />
             <label> {error}</label>
             <label>or </label>
-            <button type="button" onClick={() => alert('Face ID login not yet implemented')}>
+            <button type="button" onClick={handleFaceIDLogin}>
                 Login with Face ID
             </button>
         </form>

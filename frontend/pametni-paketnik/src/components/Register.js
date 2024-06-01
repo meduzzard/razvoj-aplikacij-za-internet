@@ -6,7 +6,7 @@ function Register() {
     const [email, setEmail] = useState('');
     const [error, setError] = useState('');
 
-    async function Register(e) {
+    async function register(e) {
         e.preventDefault();
         const res = await fetch("http://localhost:3001/users/register", {
             method: 'POST',
@@ -18,7 +18,7 @@ function Register() {
                 password: password
             })
         });
-    
+
         try {
             const data = await res.json();
             if (res.ok) {
@@ -35,15 +35,36 @@ function Register() {
             // Error parsing response
             setError("Error during registration");
         }
-    }    
+    }
+
+    const handleFaceIDRegister = async () => {
+        try {
+            const res = await fetch("http://localhost:3001/api/launch-app", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+            });
+            const data = await res.json();
+            if (data.message) {
+                console.log(data.message);
+            } else if (data.error) {
+                console.error(data.error);
+            }
+        } catch (error) {
+            console.error("Error launching app:", error);
+        }
+    };
 
     return(
-        <form onSubmit={Register}>
+        <form onSubmit={register}>
             <input type="text" name="email" placeholder="Email" value={email} onChange={(e)=>(setEmail(e.target.value))} />
             <input type="text" name="username" placeholder="Username" value={username} onChange={(e)=>(setUsername(e.target.value))}/>
             <input type="password" name="password" placeholder="Password" value={password} onChange={(e)=>(setPassword(e.target.value))} />
-            <input type="submit" name="submit" value="Login" />
+            <input type="submit" name="submit" value="Register" />
             <label>{error}</label>
+            <label>or </label>
+            <button type="button" onClick={handleFaceIDRegister}>
+                Register with Face ID
+            </button>
         </form>
     );
 }

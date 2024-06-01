@@ -1,16 +1,40 @@
-var UserModel = require('../models/userModel.js');
+const UserModel = require('../models/userModel.js');
 const bcrypt = require('bcrypt');
+const fs = require('fs');
+const path = require('path');
+const { spawn } = require('child_process');
 
 /**
  * userController.js
  *
  * @description :: Server-side logic for managing users.
  */
+
+// Function to save face images and train model
+async function trainAndSaveModel(imagePaths, userId) {
+    return new Promise((resolve, reject) => {
+        const pythonProcess = spawn('python', ['path/to/train_model.py', ...imagePaths, userId]);
+
+        pythonProcess.stdout.on('data', (data) => {
+            console.log(`stdout: ${data}`);
+        });
+
+        pythonProcess.stderr.on('data', (data) => {
+            console.error(`stderr: ${data}`);
+        });
+
+        pythonProcess.on('close', (code) => {
+            if (code === 0) {
+                resolve();
+            } else {
+                reject(new Error(`Python process exited with code ${code}`));
+            }
+        });
+    });
+}
+
 module.exports = {
 
-    /**
-     * userController.list()
-     */
     list: function (req, res) {
         UserModel.find(function (err, users) {
             if (err) {
@@ -24,9 +48,6 @@ module.exports = {
         });
     },
 
-    /**
-     * userController.show()
-     */
     show: async function (req, res) {
         var id = req.params.id;
         try {
@@ -43,15 +64,11 @@ module.exports = {
         }
     },
 
-
-    /**
-     * userController.create()
-     */
     create: function (req, res) {
         var user = new UserModel({
-			username : req.body.username,
-			email : req.body.email,
-			password : req.body.password
+            username : req.body.username,
+            email : req.body.email,
+            password : req.body.password
         });
 
         user.save(function (err, user) {
@@ -66,9 +83,6 @@ module.exports = {
         });
     },
 
-    /**
-     * userController.update()
-     */
     update: function (req, res) {
         var id = req.params.id;
 
@@ -87,8 +101,8 @@ module.exports = {
             }
 
             user.username = req.body.username ? req.body.username : user.username;
-			user.email = req.body.email ? req.body.email : user.email;
-			user.password = req.body.password ? req.body.password : user.password;
+            user.email = req.body.email ? req.body.email : user.email;
+            user.password = req.body.password ? req.body.password : user.password;
 
             user.save(function (err, user) {
                 if (err) {
@@ -103,9 +117,6 @@ module.exports = {
         });
     },
 
-    /**
-     * userController.remove()
-     */
     remove: function (req, res) {
         var id = req.params.id;
 
@@ -177,8 +188,6 @@ module.exports = {
         }
     },
 
-
-
     changePassword: async function(req, res, next) {
         try {
             const { currentPassword, newPassword } = req.body;
@@ -197,8 +206,32 @@ module.exports = {
             console.error("Error changing password:", error);
             return res.status(500).json({ message: "Password change failed" });
         }
+    },
+
+    saveFaceImages: async function (req, res) {
+        try {
+            const userId = req.body.userId;
+            const user = await UserModel.findById(userId);
+            if (!user) {
+                return res.status(404).json({ message: "User not found" });
+            }
+
+            // Save the uploaded image
+            const image = req.files.image;
+            const imagePath = path.join(__dirname, '..', 'uploads', `${userId}-${Date.now()}.png`);
+            await image.mv(imagePath);
+
+            // Add the image path to the user's faceImages
+            user.faceImages.push(imagePath);
+            await user.save();
+
+            // Train the model with the new image
+            await trainAndSaveModel(user.faceImages, userId);
+
+            return res.status(200).json({ message: "Face image saved and model trained" });
+        } catch (error) {
+            console.error("Error saving face images:", error);
+            return res.status(500).json({ message: "Error saving face images" });
+        }
     }
-
-
-
 };
