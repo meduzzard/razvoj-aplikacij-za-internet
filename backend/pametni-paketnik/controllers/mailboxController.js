@@ -62,20 +62,23 @@ module.exports = {
      */
     create: async function (req, res) {
         try {
-            const userId = req.session.userId; // Get the userId from the session
+            const userId = req.session.userId;
             if (!userId) {
                 return res.status(401).json({
                     message: 'Unauthorized: No user logged in'
                 });
             }
 
+            const { latitude, longitude } = req.body;
+
             var mailbox = new MailboxModel({
-                owner: userId, // Store the user ID directly
-                last_opened: null 
+                owner: userId,
+                latitude: latitude,
+                longitude: longitude,
+                last_opened: null
             });
 
-            const savedMailbox = await mailbox.save(); // Save the mailbox
-
+            const savedMailbox = await mailbox.save();
             return res.status(201).json(savedMailbox);
         } catch (error) {
             return res.status(500).json({
@@ -84,7 +87,8 @@ module.exports = {
             });
         }
     },
-    
+
+
     /**
      * mailboxController.update()
      */

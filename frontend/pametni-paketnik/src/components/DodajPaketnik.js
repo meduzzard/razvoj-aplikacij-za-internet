@@ -38,14 +38,29 @@ function DodajPaketnik() {
     }, []);
 
     const handleAddMailbox = async () => {
-        try {
-            const response = await axios.post('http://localhost:3001/mailboxes/addMailbox', {}, { withCredentials: true });
-            console.log(response.data); // Handle success
-            setMailboxes([...mailboxes, response.data]);
-        } catch (error) {
-            console.error("There was an error creating the mailbox!", error); // Handle error
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser');
+            return;
         }
+
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const { latitude, longitude } = position.coords;
+
+            try {
+                const response = await axios.post(
+                    'http://localhost:3001/mailboxes/addMailbox',
+                    { latitude, longitude },
+                    { withCredentials: true }
+                );
+                setMailboxes([...mailboxes, response.data]);
+            } catch (error) {
+                console.error("There was an error creating the mailbox!", error);
+            }
+        }, (error) => {
+            console.error("Error obtaining geolocation:", error);
+        });
     };
+
 
     const handleUnlockMailbox = async (mailboxId) => {
         try {
