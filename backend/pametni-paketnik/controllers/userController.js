@@ -2,7 +2,7 @@ const UserModel = require('../models/userModel.js');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
 const path = require('path');
-const { spawn } = require('child_process');
+const { spawn, exec } = require('child_process'); 
 
 /**
  * userController.js
@@ -143,6 +143,16 @@ module.exports = {
             // Create a new user
             const newUser = new UserModel({ username, email, password });
             await newUser.save();
+
+            // Trigger the Kotlin app launch via adb
+            exec('adb shell am start -a android.intent.action.VIEW -d "mypametnipaketnikapp://register"', (err, stdout, stderr) => {
+                if (err) {
+                    console.error(`Error launching app: ${err}`);
+                    return res.status(500).json({ message: "Registration successful, but failed to launch app" });
+                }
+                console.log(`App launch output: ${stdout}`);
+            });
+
             return res.status(201).json({ message: "Registration successful" });
         } catch (error) {
             console.error("Error during registration:", error);
@@ -215,23 +225,29 @@ module.exports = {
             if (!user) {
                 return res.status(404).json({ message: "User not found" });
             }
-
-            // Save the uploaded image
-            const image = req.files.image;
-            const imagePath = path.join(__dirname, '..', 'uploads', `${userId}-${Date.now()}.png`);
-            await image.mv(imagePath);
-
-            // Add the image path to the user's faceImages
-            user.faceImages.push(imagePath);
+    
+            const images = req.files;
+            const imagePaths = [];
+            for (const key in images) {
+                if (images.hasOwnProperty(key)) {
+                    const image = images[key];
+                    const imagePath = path.join(__dirname, '..', 'uploads', `${userId}-${Date.now()}-${key}.png`);
+                    await image.mv(imagePath);
+                    imagePaths.push(imagePath);
+                }
+            }
+    
+            // Save image paths to user's faceImages array or other relevant field
+            user.faceImages = user.faceImages ? user.faceImages.concat(imagePaths) : imagePaths;
             await user.save();
-
-            // Train the model with the new image
-            await trainAndSaveModel(user.faceImages, userId);
-
-            return res.status(200).json({ message: "Face image saved and model trained" });
+    
+            // Optionally trigger training process here if desired
+            // await trainAndSaveModel(imagePaths, userId);
+    
+            return res.status(200).json({ message: "Face images saved and model trained" });
         } catch (error) {
             console.error("Error saving face images:", error);
             return res.status(500).json({ message: "Error saving face images" });
         }
-    }
+    }    
 };
