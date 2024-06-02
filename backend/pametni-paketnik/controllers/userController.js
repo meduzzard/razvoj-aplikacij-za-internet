@@ -2,7 +2,10 @@ const UserModel = require('../models/userModel.js');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
 const path = require('path');
-const { spawn, exec } = require('child_process'); 
+const mongoose = require('mongoose');
+const { spawn, exec } = require('child_process');
+const multer = require('multer');
+const upload = multer();
 
 /**
  * userController.js
@@ -34,7 +37,6 @@ async function trainAndSaveModel(imagePaths, userId) {
 }
 
 module.exports = {
-
     list: function (req, res) {
         UserModel.find(function (err, users) {
             if (err) {
@@ -66,9 +68,9 @@ module.exports = {
 
     create: function (req, res) {
         var user = new UserModel({
-            username : req.body.username,
-            email : req.body.email,
-            password : req.body.password
+            username: req.body.username,
+            email: req.body.email,
+            password: req.body.password
         });
 
         user.save(function (err, user) {
@@ -144,19 +146,26 @@ module.exports = {
             const newUser = new UserModel({ username, email, password });
             await newUser.save();
 
-            // Trigger the Kotlin app launch via adb
-            exec('adb shell am start -a android.intent.action.VIEW -d "mypametnipaketnikapp://register"', (err, stdout, stderr) => {
+            // Trigger the Kotlin app launch via adb with userId
+            exec(`adb shell am start -a android.intent.action.VIEW -d "mypametnipaketnikapp://register?userId=${newUser._id}"`, (err, stdout, stderr) => {
                 if (err) {
                     console.error(`Error launching app: ${err}`);
-                    return res.status(500).json({ message: "Registration successful, but failed to launch app" });
+                    console.error(`stderr: ${stderr}`);
+                    if (!res.headersSent) {
+                        return res.status(500).json({ message: "Registration successful, but failed to launch app" });
+                    }
+                } else {
+                    console.log(`App launch output: ${stdout}`);
+                    if (!res.headersSent) {
+                        res.status(201).json({ message: "Registration successful", userId: newUser._id });
+                    }
                 }
-                console.log(`App launch output: ${stdout}`);
             });
-
-            return res.status(201).json({ message: "Registration successful" });
         } catch (error) {
             console.error("Error during registration:", error);
-            return res.status(500).json({ message: "Registration failed" });
+            if (!res.headersSent) {
+                res.status(500).json({ message: "Registration failed" });
+            }
         }
     },
 
@@ -207,7 +216,7 @@ module.exports = {
             }
             const match = await bcrypt.compare(currentPassword, user.password);
             if (!match) {
-                return res.status(400).json({ message: 'Current password is incorrect it is ' + user.password });
+                return res.status(400).json({ message: 'Current password is incorrect' });
             }
             user.password = newPassword;
             await user.save();
@@ -221,14 +230,17 @@ module.exports = {
     saveFaceImages: async function (req, res) {
         try {
             console.log('saveFaceImages called');
+            console.log('Request body:', req.body); // Debug statement
+
             const userId = req.body.userId;
-            console.log(`User ID: ${userId}`);
+            console.log(`User ID received from request body: ${userId}`);
 
             // Validate userId
             if (!mongoose.Types.ObjectId.isValid(userId)) {
+                console.log('Invalid user ID');
                 return res.status(400).json({ message: "Invalid user ID" });
             }
-            
+
             const user = await UserModel.findById(userId);
             if (!user) {
                 console.log('User not found');
@@ -243,11 +255,18 @@ module.exports = {
 
             console.log('Images received:', Object.keys(images));
             const imagePaths = [];
+            const uploadDir = path.join(__dirname, '..', 'uploads');
+
+            // Ensure the uploads directory exists
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir);
+            }
+
             for (const key in images) {
                 if (images.hasOwnProperty(key)) {
                     const image = images[key];
-                    const imagePath = path.join(__dirname, '..', 'uploads', `${userId}-${Date.now()}-${key}.png`);
-                    await image.mv(imagePath);
+                    const imagePath = path.join(uploadDir, `${userId}-${Date.now()}-${key}.png`);
+                    fs.writeFileSync(imagePath, image.buffer);
                     imagePaths.push(imagePath);
                     console.log(`Image saved to ${imagePath}`);
                 }
@@ -258,7 +277,7 @@ module.exports = {
             await user.save();
 
             // Optionally trigger training process here if desired
-            await trainAndSaveModel(imagePaths, userId);
+            // await trainAndSaveModel(imagePaths, userId);
 
             console.log('Face images saved and model trained');
             return res.status(200).json({ message: "Face images saved and model trained" });
