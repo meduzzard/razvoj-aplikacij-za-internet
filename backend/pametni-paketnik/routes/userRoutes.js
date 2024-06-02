@@ -4,7 +4,6 @@ var userController = require('../controllers/userController.js');
 
 router.get('/', userController.list);
 router.get('/profile', userController.profile);
-//router.get('/login', userController.renderLogin); //vrstni red pomemben (login pred show --> ker rabi user_id)
 router.get('/:id', userController.show);
 router.post('/', userController.create);
 router.post('/register', userController.register);
@@ -13,7 +12,7 @@ router.put('/:id', userController.update);
 router.post('/change-password', userController.changePassword);
 router.delete('/:id', userController.remove);
 
-
-
+// Add this line for saveFaceImages
+router.post('/saveFaceImages', userController.saveFaceImages);
 
 module.exports = router;

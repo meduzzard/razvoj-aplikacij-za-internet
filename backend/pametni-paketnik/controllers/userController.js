@@ -220,13 +220,28 @@ module.exports = {
 
     saveFaceImages: async function (req, res) {
         try {
+            console.log('saveFaceImages called');
             const userId = req.body.userId;
+            console.log(`User ID: ${userId}`);
+
+            // Validate userId
+            if (!mongoose.Types.ObjectId.isValid(userId)) {
+                return res.status(400).json({ message: "Invalid user ID" });
+            }
+            
             const user = await UserModel.findById(userId);
             if (!user) {
+                console.log('User not found');
                 return res.status(404).json({ message: "User not found" });
             }
-    
+
             const images = req.files;
+            if (!images || Object.keys(images).length === 0) {
+                console.log('No images found in request');
+                return res.status(400).json({ message: "No images uploaded" });
+            }
+
+            console.log('Images received:', Object.keys(images));
             const imagePaths = [];
             for (const key in images) {
                 if (images.hasOwnProperty(key)) {
@@ -234,20 +249,22 @@ module.exports = {
                     const imagePath = path.join(__dirname, '..', 'uploads', `${userId}-${Date.now()}-${key}.png`);
                     await image.mv(imagePath);
                     imagePaths.push(imagePath);
+                    console.log(`Image saved to ${imagePath}`);
                 }
             }
-    
-            // Save image paths to user's faceImages array or other relevant field
+
+            // Save image paths to user's faceImages array
             user.faceImages = user.faceImages ? user.faceImages.concat(imagePaths) : imagePaths;
             await user.save();
-    
+
             // Optionally trigger training process here if desired
-            // await trainAndSaveModel(imagePaths, userId);
-    
+            await trainAndSaveModel(imagePaths, userId);
+
+            console.log('Face images saved and model trained');
             return res.status(200).json({ message: "Face images saved and model trained" });
         } catch (error) {
             console.error("Error saving face images:", error);
-            return res.status(500).json({ message: "Error saving face images" });
+            return res.status(500).json({ message: "Error saving face images", error: error.message });
         }
-    }    
+    }
 };
