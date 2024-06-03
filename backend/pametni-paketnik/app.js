@@ -1,37 +1,43 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-var mongoose = require('mongoose');
+import createError from 'http-errors';
+import express from 'express';
+import path from 'path';
+import cookieParser from 'cookie-parser';
+import logger from 'morgan';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import session from 'express-session';
+import { fileURLToPath } from 'url';
+import MongoStore from 'connect-mongo'; // Import MongoStore directly
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Initialize express app
+const app = express();
 
 // Database connection
-var mongoDB = "mongodb://127.0.0.1/pametni-paketnik";
+const mongoDB = "mongodb://127.0.0.1/pametni-paketnik";
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.Promise = global.Promise;
-var db = mongoose.connection;
+const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 db.once('open', function() {
   console.log('Connected to the database');
 });
 
 // Routers
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/userRoutes');
-var mailboxesRouter = require('./routes/mailboxRoutes');
-
-// Initialize express app
-var app = express();
+import indexRouter from './routes/index.js';
+import usersRouter from './routes/userRoutes.js';
+import mailboxesRouter from './routes/mailboxRoutes.js';
 
 // CORS setup
-var cors = require('cors');
-var allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
 app.use(cors({
   credentials: true,
   origin: function(origin, callback) {
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) === -1) {
-      var msg = "The CORS policy does not allow access from the specified Origin.";
+      const msg = "The CORS policy does not allow access from the specified Origin.";
       return callback(new Error(msg), false);
     }
     return callback(null, true);
@@ -50,13 +56,14 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Session management
-var session = require('express-session');
-var MongoStore = require('connect-mongo');
 app.use(session({
   secret: 'work hard',
   resave: true,
   saveUninitialized: false,
-  store: MongoStore.create({ mongoUrl: mongoDB })
+  store: new MongoStore({ 
+    mongoUrl: mongoDB,
+    collection: 'sessions' // Optionally specify the collection name
+  }) 
 }));
 
 // Custom middleware to make session available in views
@@ -84,4 +91,4 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-module.exports = app;
+export default app;
