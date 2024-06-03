@@ -4,12 +4,29 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Fix Leaflet's default icon issue with Webpack
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
-    iconUrl: require('leaflet/dist/images/marker-icon.png'),
+// Import the images
+import redIconUrl from '../images/red_marker.png';
+import greenIconUrl from '../images/green_marker.png';
+
+// Custom icons
+const redIcon = new L.Icon({
+    iconUrl: redIconUrl,
+    iconRetinaUrl: redIconUrl,
     shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+});
+
+const greenIcon = new L.Icon({
+    iconUrl: greenIconUrl,
+    iconRetinaUrl: greenIconUrl,
+    shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
 });
 
 function DodajPaketnik() {
@@ -61,7 +78,6 @@ function DodajPaketnik() {
         });
     };
 
-
     const handleUnlockMailbox = async (mailboxId) => {
         try {
             const response = await axios.put(`http://localhost:3001/mailboxes/unlockMailbox/${mailboxId}`, {}, { withCredentials: true });
@@ -95,7 +111,11 @@ function DodajPaketnik() {
                 />
                 {mailboxes.map(mailbox => (
                     mailbox.latitude && mailbox.longitude ? (
-                        <Marker key={mailbox._id} position={[mailbox.latitude, mailbox.longitude]}>
+                        <Marker
+                            key={mailbox._id}
+                            position={[mailbox.latitude, mailbox.longitude]}
+                            icon={mailbox.last_opened ? greenIcon : redIcon}
+                        >
                             <Popup>
                                 <span>ID Mailbox: {mailbox._id}</span>
                             </Popup>
