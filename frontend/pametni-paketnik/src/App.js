@@ -8,6 +8,7 @@ import Register from "./components/Register";
 import Profile from "./components/Profile";
 import Logout from "./components/Logout";
 import DodajPaketnik from "./components/DodajPaketnik";
+import './styles.css';  // Uvozimo styles.css
 
 function App() {
   /**

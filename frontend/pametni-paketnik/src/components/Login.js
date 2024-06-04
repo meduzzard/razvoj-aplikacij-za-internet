@@ -1,6 +1,7 @@
 import { useContext, useState } from 'react';
 import { UserContext } from '../userContext';
 import { Navigate } from 'react-router-dom';
+import '../styles.css';
 
 function Login() {
     const [username, setUsername] = useState("");
@@ -46,29 +47,33 @@ function Login() {
     };
 
     return (
-        <form onSubmit={handleLogin}>
-            {userContext.user ? <Navigate replace to="/" /> : ""}
-            <input 
-                type="text" 
-                name="username" 
-                placeholder="Username"
-                value={username} 
-                onChange={(e) => setUsername(e.target.value)} 
-            />
-            <input 
-                type="password" 
-                name="password" 
-                placeholder="Password"
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-            />
-            <input type="submit" name="submit" value="Login" />
-            <label> {error}</label>
-            <label>or </label>
-            <button type="button" onClick={handleFaceIDLogin}>
-                Login with Face ID
-            </button>
-        </form>
+        <div className="container">
+            <form onSubmit={handleLogin} className="login-form">
+                {userContext.user ? <Navigate replace to="/" /> : ""}
+                <input 
+                    type="text" 
+                    name="username" 
+                    placeholder="Username"
+                    value={username} 
+                    onChange={(e) => setUsername(e.target.value)} 
+                />
+                <input 
+                    type="password" 
+                    name="password" 
+                    placeholder="Password"
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
+                />
+                <div className="login-buttons">
+                    <input type="submit" name="submit" value="Login" className="primary-button" />
+                    <label className="or-label">or</label>
+                    <button type="button" className="primary-button" onClick={handleFaceIDLogin}>
+                        Login with Face ID
+                    </button>
+                </div>
+                <label>{error}</label>
+            </form>
+        </div>
     );
 }
 

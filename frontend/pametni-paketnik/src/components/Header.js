@@ -1,21 +1,21 @@
 import { useContext } from "react";
 import { UserContext } from "../userContext";
 import { Link } from "react-router-dom";
+import '../styles.css';
 
 function Header(props) {
     const { user } = useContext(UserContext);
 
     return (
-        <header>
+        <header className="header">
             <h1>{props.title}</h1>
             <nav>
-                <ul>
+                <ul className="nav-links">
                     <li><Link to='/'>Home</Link></li>
                     {user ? (
                         <>
-                            <li><Link to='/publish'>Publish</Link></li>
-                            <li><Link to='/profile'>Profile</Link></li>
                             <li><Link to='/dodaj-paketnik'>Dodaj Paketnik</Link></li>
+                            <li><Link to='/profile'>Profile</Link></li>
                             <li><Link to='/logout'>Logout</Link></li>
                         </>
                     ) : (
@@ -26,7 +26,7 @@ function Header(props) {
                     )}
                 </ul>
             </nav>
-        </header >
+        </header>
     );
 }
 

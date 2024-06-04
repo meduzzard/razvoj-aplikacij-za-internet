@@ -3,6 +3,7 @@ import axios from 'axios';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import '../styles.css';
 
 // Import the images
 import redIconUrl from '../images/red_marker.png';
@@ -89,16 +90,16 @@ function DodajPaketnik() {
     };
 
     return (
-        <div>
+        <div className="container">
             <h2>Add New Mailbox</h2>
-            <button onClick={handleAddMailbox}>Add Mailbox</button>
+            <button className="primary-button" onClick={handleAddMailbox}>Add Mailbox</button>
 
             <h2>Mailboxes</h2>
-            <ul>
+            <ul className="mailbox-list">
                 {mailboxes.map(mailbox => (
-                    <li key={mailbox._id}>
-                        <span>ID Mailbox: {mailbox._id} </span>
-                        <button onClick={() => handleUnlockMailbox(mailbox._id)}>Unlock Mailbox</button>
+                    <li key={mailbox._id} className="mailbox-item">
+                        <span>ID Mailbox: {mailbox._id}</span>
+                        <button className="unlock-button" onClick={() => handleUnlockMailbox(mailbox._id)}>Unlock Mailbox</button>
                     </li>
                 ))}
             </ul>
