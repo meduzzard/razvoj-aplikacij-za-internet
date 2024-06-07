@@ -178,4 +178,26 @@ module.exports = {
             });
         }
     },
+
+    unlockHistory: async function (req, res) {
+        var id = req.params.id;
+
+        try {
+            const mailbox = await MailboxModel.findById(id);
+            if (!mailbox) {
+                return res.status(404).json({
+                    message: 'No such mailbox'
+                });
+            }
+
+            const unlockHistory = mailbox.unlock_history; // Pridobimo zgodovino odklepanja
+
+            return res.json(unlockHistory);
+        } catch (err) {
+            return res.status(500).json({
+                message: 'Error when getting unlock history.',
+                error: err
+            });
+        }
+    },
 };

@@ -1,5 +1,8 @@
+// frontend/compose/DodajPaketnik.js
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -40,15 +43,6 @@ function DodajPaketnik() {
                 setMailboxes(response.data);
             } catch (error) {
                 console.error("There was an error fetching the mailboxes!", error);
-                if (error.response) {
-                    console.error("Error data:", error.response.data);
-                    console.error("Error status:", error.response.status);
-                    console.error("Error headers:", error.response.headers);
-                } else if (error.request) {
-                    console.error("Error request:", error.request);
-                } else {
-                    console.error("Error message:", error.message);
-                }
             }
         };
 
@@ -100,6 +94,7 @@ function DodajPaketnik() {
                     <li key={mailbox._id} className="mailbox-item">
                         <span>ID Mailbox: {mailbox._id}</span>
                         <button className="unlock-button" onClick={() => handleUnlockMailbox(mailbox._id)}>Unlock Mailbox</button>
+                        <Link to={`/zgodovina/${mailbox._id}`} className="history-button">Unlock History</Link>
                     </li>
                 ))}
             </ul>
