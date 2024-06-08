@@ -14,9 +14,9 @@ const upload = multer();
  */
 
 // Function to save face images and train model
-async function trainAndSaveModel(imagePaths, userId) {
+const trainAndSaveModel = (imagePaths, userId, username) => {
     return new Promise((resolve, reject) => {
-        const pythonProcess = spawn('python', ['path/to/train_model.py', ...imagePaths, userId]);
+        const pythonProcess = spawn('C:/Users/Klemen/pythonProject2/myenv/Scripts/python.exe', ['C:/Users/Klemen/pythonProject2/main.py', ...imagePaths, username]);
 
         pythonProcess.stdout.on('data', (data) => {
             console.log(`stdout: ${data}`);
@@ -29,6 +29,29 @@ async function trainAndSaveModel(imagePaths, userId) {
         pythonProcess.on('close', (code) => {
             if (code === 0) {
                 resolve();
+            } else {
+                reject(new Error(`Python process exited with code ${code}`));
+            }
+        });
+    });
+}
+
+// Function to verify user
+async function verifyUser(imagePath, username) {
+    return new Promise((resolve, reject) => {
+        const pythonProcess = spawn('python', ['path/to/verify_user.py', imagePath, username]);
+
+        pythonProcess.stdout.on('data', (data) => {
+            console.log(`stdout: ${data}`);
+        });
+
+        pythonProcess.stderr.on('data', (data) => {
+            console.error(`stderr: ${data}`);
+        });
+
+        pythonProcess.on('close', (code) => {
+            if (code === 0) {
+                resolve(true);
             } else {
                 reject(new Error(`Python process exited with code ${code}`));
             }
@@ -173,7 +196,16 @@ module.exports = {
         try {
             const user = await UserModel.authenticate(req.body.username, req.body.password);
             req.session.userId = user._id; // Make sure this line only runs if user is not null
-            return res.json(user);
+
+            // Capture the image from Kotlin app and save it temporarily
+            const imagePath = 'path/to/temp/image.png'; // Adjust the path accordingly
+
+            const verificationResult = await verifyUser(imagePath, user.username);
+            if (verificationResult) {
+                return res.json({ message: 'Login successful' });
+            } else {
+                return res.status(401).json({ message: 'Login failed' });
+            }
         } catch (error) {
             console.error("Login error:", error.message);
             return res.status(401).send({ error: 'Login failed' });
@@ -276,8 +308,8 @@ module.exports = {
             user.faceImages = user.faceImages ? user.faceImages.concat(imagePaths) : imagePaths;
             await user.save();
 
-            // Optionally trigger training process here if desired
-            // await trainAndSaveModel(imagePaths, userId);
+            // Trigger training process here
+            await trainAndSaveModel(imagePaths, userId, user.username);
 
             console.log('Face images saved and model trained');
             return res.status(200).json({ message: "Face images saved and model trained" });
