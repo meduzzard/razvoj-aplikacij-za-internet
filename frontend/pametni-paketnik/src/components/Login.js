@@ -11,47 +11,83 @@ function Login() {
 
     async function handleLogin(e) {
         e.preventDefault();
+        setError(""); // Clear any previous errors
+
         try {
             const res = await fetch("http://localhost:3001/users/login", {
                 method: "POST",
                 credentials: "include",
-                headers: { 'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    username: username,
-                    password: password
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
             });
+
             const data = await res.json();
+
             if (res.ok) {
-                console.log(data.message);
-                // Here we would launch the Android login activity for Face ID verification
-                const launchRes = await fetch("http://localhost:3001/users/launch-login", {
+                console.log("Login step 1 successful, proceed with Face ID verification");
+
+                // Trigger the Face ID login process
+                await launchFaceIDVerification();
+            } else {
+                setError(data.message || "Invalid username or password");
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            setError("Login error");
+        }
+    }
+
+    const launchFaceIDVerification = async () => {
+        try {
+            const res = await fetch("http://localhost:3001/users/launch-login", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+
+            const data = await res.json();
+            if (data.message === "Login activity launched") {
+                console.log("Face ID verification process started");
+                // Poll for the verification result
+                pollForVerificationResult();
+            } else {
+                setError("Failed to launch Face ID verification process");
+            }
+        } catch (error) {
+            console.error("Error launching Face ID verification process:", error);
+            setError("Error launching Face ID verification process");
+        }
+    };
+
+    const pollForVerificationResult = async () => {
+        const interval = setInterval(async () => {
+            try {
+                const res = await fetch("http://localhost:3001/users/check-verification-result", {
                     method: "POST",
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username })
                 });
-                const launchData = await launchRes.json();
-                if (launchRes.ok) {
-                    console.log(launchData.message);
-                } else {
-                    console.error(launchData.error);
-                    setError("Failed to launch login activity");
+
+                const data = await res.json();
+                if (data.verified) {
+                    clearInterval(interval);
+                    userContext.setUserContext(data.user);
+                } else if (data.error) {
+                    clearInterval(interval);
+                    setError(data.error);
                 }
-            } else {
-                setError(data.message || "Invalid username or password");
-                setUsername("");
-                setPassword("");
+            } catch (error) {
+                clearInterval(interval);
+                console.error("Error polling for verification result:", error);
+                setError("Error polling for verification result");
             }
-        } catch (error) {
-            console.error("Error during login:", error);
-            setError("Error during login");
-        }
-    }
+        }, 2000); // Poll every 2 seconds
+    };
 
     return (
         <div className="container">
+            {userContext.user ? <Navigate replace to="/" /> : ""}
             <form onSubmit={handleLogin} className="login-form">
-                {userContext.user ? <Navigate replace to="/" /> : ""}
                 <input
                     type="text"
                     name="username"

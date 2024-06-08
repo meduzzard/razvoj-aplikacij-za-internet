@@ -10,12 +10,12 @@ router.get('/:id', userController.show);
 router.post('/', userController.create);
 router.post('/register', userController.register);
 router.post('/login', userController.login);
-router.post('/launch-login', userController.launchLogin);
+router.post('/check-verification-result', userController.checkVerificationResult);
 router.put('/:id', userController.update);
 router.post('/change-password', userController.changePassword);
 router.delete('/:id', userController.remove);
-
-// Add this line for saveFaceImages
 router.post('/saveFaceImages', upload.any(), userController.saveFaceImages);
+router.post('/verifyFaceImage', upload.any(), userController.verifyFaceImage);
+router.post('/launch-login', userController.launchLogin);
 
 module.exports = router;
