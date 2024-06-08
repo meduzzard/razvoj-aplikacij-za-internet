@@ -7,69 +7,67 @@ function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-    const userContext = useContext(UserContext); 
+    const userContext = useContext(UserContext);
 
     async function handleLogin(e) {
         e.preventDefault();
-        const res = await fetch("http://localhost:3001/users/login", {
-            method: "POST",
-            credentials: "include",
-            headers: { 'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                username: username,
-                password: password
-            })
-        });
-        const data = await res.json();
-        if(data._id !== undefined){
-            userContext.setUserContext(data);
-        } else {
-            setUsername("");
-            setPassword("");
-            setError("Invalid username or password");
-        }
-    }
-
-    const handleFaceIDLogin = async () => {
         try {
-            const res = await fetch("http://localhost:3001/api/launch-app", {
-                method: "POST"
+            const res = await fetch("http://localhost:3001/users/login", {
+                method: "POST",
+                credentials: "include",
+                headers: { 'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
             });
             const data = await res.json();
-            if (data.message) {
+            if (res.ok) {
                 console.log(data.message);
-            } else if (data.error) {
-                console.error(data.error);
+                // Here we would launch the Android login activity for Face ID verification
+                const launchRes = await fetch("http://localhost:3001/users/launch-login", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+                const launchData = await launchRes.json();
+                if (launchRes.ok) {
+                    console.log(launchData.message);
+                } else {
+                    console.error(launchData.error);
+                    setError("Failed to launch login activity");
+                }
+            } else {
+                setError(data.message || "Invalid username or password");
+                setUsername("");
+                setPassword("");
             }
         } catch (error) {
-            console.error("Error launching app:", error);
+            console.error("Error during login:", error);
+            setError("Error during login");
         }
-    };
+    }
 
     return (
         <div className="container">
             <form onSubmit={handleLogin} className="login-form">
                 {userContext.user ? <Navigate replace to="/" /> : ""}
-                <input 
-                    type="text" 
-                    name="username" 
+                <input
+                    type="text"
+                    name="username"
                     placeholder="Username"
-                    value={username} 
-                    onChange={(e) => setUsername(e.target.value)} 
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                 />
-                <input 
-                    type="password" 
-                    name="password" 
+                <input
+                    type="password"
+                    name="password"
                     placeholder="Password"
-                    value={password} 
-                    onChange={(e) => setPassword(e.target.value)} 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                 />
                 <div className="login-buttons">
                     <input type="submit" name="submit" value="Login" className="primary-button" />
-                    <label className="or-label">or</label>
-                    <button type="button" className="primary-button" onClick={handleFaceIDLogin}>
-                        Login with Face ID
-                    </button>
                 </div>
                 <label>{error}</label>
             </form>

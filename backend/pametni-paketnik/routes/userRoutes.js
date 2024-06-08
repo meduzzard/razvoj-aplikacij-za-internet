@@ -10,6 +10,7 @@ router.get('/:id', userController.show);
 router.post('/', userController.create);
 router.post('/register', userController.register);
 router.post('/login', userController.login);
+router.post('/launch-login', userController.launchLogin);
 router.put('/:id', userController.update);
 router.post('/change-password', userController.changePassword);
 router.delete('/:id', userController.remove);

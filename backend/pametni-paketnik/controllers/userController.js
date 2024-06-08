@@ -13,51 +13,34 @@ const upload = multer();
  * @description :: Server-side logic for managing users.
  */
 
-// Function to save face images and train model
-const trainAndSaveModel = (imagePaths, userId, username) => {
+// Function to verify user credentials
+async function verifyCredentials(username, password) {
+    const user = await UserModel.findOne({ username });
+    if (!user) {
+        throw new Error('Invalid username or password');
+    }
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+        throw new Error('Invalid username or password');
+    }
+    return user;
+}
+
+// Function to launch the login activity
+const launchLoginActivity = (username) => {
     return new Promise((resolve, reject) => {
-        const pythonProcess = spawn('C:/Users/Klemen/pythonProject2/myenv/Scripts/python.exe', ['C:/Users/Klemen/pythonProject2/main.py', ...imagePaths, username]);
-
-        pythonProcess.stdout.on('data', (data) => {
-            console.log(`stdout: ${data}`);
-        });
-
-        pythonProcess.stderr.on('data', (data) => {
-            console.error(`stderr: ${data}`);
-        });
-
-        pythonProcess.on('close', (code) => {
-            if (code === 0) {
-                resolve();
+        const command = `launch_login_activity.bat ${username}`;
+        exec(command, (err, stdout, stderr) => {
+            if (err) {
+                console.error(`Error launching login activity: ${err}`);
+                reject(err);
             } else {
-                reject(new Error(`Python process exited with code ${code}`));
+                console.log(`Login activity launch output: ${stdout}`);
+                resolve(stdout);
             }
         });
     });
-}
-
-// Function to verify user
-async function verifyUser(imagePath, username) {
-    return new Promise((resolve, reject) => {
-        const pythonProcess = spawn('python', ['path/to/verify_user.py', imagePath, username]);
-
-        pythonProcess.stdout.on('data', (data) => {
-            console.log(`stdout: ${data}`);
-        });
-
-        pythonProcess.stderr.on('data', (data) => {
-            console.error(`stderr: ${data}`);
-        });
-
-        pythonProcess.on('close', (code) => {
-            if (code === 0) {
-                resolve(true);
-            } else {
-                reject(new Error(`Python process exited with code ${code}`));
-            }
-        });
-    });
-}
+};
 
 module.exports = {
     list: function (req, res) {
@@ -192,23 +175,18 @@ module.exports = {
         }
     },
 
-    login: async function(req, res, next) {
+    login: async function(req, res) {
         try {
-            const user = await UserModel.authenticate(req.body.username, req.body.password);
-            req.session.userId = user._id; // Make sure this line only runs if user is not null
+            const { username, password } = req.body;
+            const user = await verifyCredentials(username, password);
 
-            // Capture the image from Kotlin app and save it temporarily
-            const imagePath = 'path/to/temp/image.png'; // Adjust the path accordingly
+            // Launch the Kotlin app for Face ID verification
+            await launchLoginActivity(username);
 
-            const verificationResult = await verifyUser(imagePath, user.username);
-            if (verificationResult) {
-                return res.json({ message: 'Login successful' });
-            } else {
-                return res.status(401).json({ message: 'Login failed' });
-            }
+            res.json({ message: 'Credentials verified, proceed with Face ID verification' });
         } catch (error) {
             console.error("Login error:", error.message);
-            return res.status(401).send({ error: 'Login failed' });
+            return res.status(401).json({ error: 'Login failed', message: error.message });
         }
     },
 
@@ -316,6 +294,16 @@ module.exports = {
         } catch (error) {
             console.error("Error saving face images:", error);
             return res.status(500).json({ message: "Error saving face images", error: error.message });
+        }
+    },
+
+    launchLogin: async function (req, res) {
+        const { username } = req.body;
+        try {
+            await launchLoginActivity(username);
+            res.status(200).json({ message: "Login activity launched" });
+        } catch (error) {
+            res.status(500).json({ error: "Failed to launch login activity" });
         }
     }
 };
