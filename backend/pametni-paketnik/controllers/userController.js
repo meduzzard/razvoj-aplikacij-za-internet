@@ -66,7 +66,11 @@ module.exports = {
         const { username } = req.body;
         try {
             if (verificationStatus[username] && verificationStatus[username].isVerified) {
-                return res.status(200).json({ verified: true, user: verificationStatus[username].user });
+                const user = await UserModel.findOne({ username });
+                if (!user) {
+                    return res.status(404).json({ message: 'User not found' });
+                }
+                return res.status(200).json({ verified: true, user });
             } else {
                 return res.status(200).json({ verified: false });
             }
@@ -210,6 +214,9 @@ module.exports = {
             const user = await verifyCredentials(username, password);
 
             console.log("Credentials verified for user:", user.username);
+
+            // Set the session userId to the logged-in user
+            req.session.userId = user._id;
 
             // Reset the verification status before launching the activity
             verificationStatus[username] = { isVerified: false, user: null };

@@ -72,6 +72,8 @@ function Login() {
                 if (data.verified) {
                     clearInterval(interval);
                     userContext.setUserContext(data.user);
+                    // Save user ID to session storage or local storage if needed
+                    sessionStorage.setItem('userId', data.user._id);
                 } else if (data.error) {
                     clearInterval(interval);
                     setError(data.error);
