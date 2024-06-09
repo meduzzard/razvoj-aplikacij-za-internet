@@ -1,22 +1,24 @@
 var mongoose = require('mongoose');
 var bcrypt = require('bcrypt');
-var Schema   = mongoose.Schema;
+var Schema = mongoose.Schema;
 
 var userSchema = new Schema({
-	'username' : String,
-	'password' : String,
-	'email' : String,
+    'username': String,
+    'password': String,
+    'email': String,
+    'faceImages': [String]  // Add this line to store image paths
 });
 
-userSchema.pre('save', function(next){
-	var user = this;
-	bcrypt.hash(user.password, 10, function(err, hash){
-		if(err){
-			return next(err);
-		}
-		user.password = hash;
-		next();
-	});
+userSchema.pre('save', function(next) {
+    var user = this;
+    if (!user.isModified('password')) return next();
+    bcrypt.hash(user.password, 10, function(err, hash) {
+        if (err) {
+            return next(err);
+        }
+        user.password = hash;
+        next();
+    });
 });
 
 userSchema.statics.authenticate = async function(username, password) {

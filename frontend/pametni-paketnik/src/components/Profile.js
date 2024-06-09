@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../userContext';
 import { Navigate } from 'react-router-dom';
+import '../styles.css';
 
 function Profile(){
     const userContext = useContext(UserContext);
@@ -52,7 +53,6 @@ function Profile(){
         }
     }
 
-
     const handleChange = (e) => {
         setPasswordForm({
             ...passwordForm,
@@ -61,12 +61,12 @@ function Profile(){
     }
 
     return (
-        <>
+        <div className="container">
             {!userContext.user ? <Navigate replace to="/login" /> : ""}
             <h1>User profile</h1>
             <p>Username: {profile.username}</p>
             <p>Email: {profile.email}</p>
-            <div>
+            <div className="password-change-form">
                 <input
                     type="password"
                     name="currentPassword"
@@ -81,9 +81,9 @@ function Profile(){
                     onChange={handleChange}
                     placeholder="New Password"
                 />
-                <button onClick={handlePasswordChange}>Change Password</button>
+                <button className="primary-button" onClick={handlePasswordChange}>Change Password</button>
             </div>
-        </>
+        </div>
     );
 }
 

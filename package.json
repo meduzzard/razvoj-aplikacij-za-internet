@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "http-errors": "^2.0.0",
+    "leaflet": "^1.9.4",
+    "react-leaflet": "^4.2.1"
+  }
+}

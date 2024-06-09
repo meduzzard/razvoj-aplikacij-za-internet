@@ -14,7 +14,13 @@ module.exports = {
     list: async function (req, res) {
         console.log('Fetching mailboxes...');
         try {
-            const mailboxes = await MailboxModel.find(); // Use await here
+            const userId = req.session.userId; // Get the userId from the session
+            if (!userId) {
+                return res.status(401).json({
+                    message: 'Unauthorized: No user logged in'
+                });
+            }
+            const mailboxes = await MailboxModel.find({ owner: userId }); // Filter by user ID
             console.log('Mailboxes fetched successfully:', mailboxes);
             return res.json(mailboxes);
         } catch (err) {
@@ -56,27 +62,23 @@ module.exports = {
      */
     create: async function (req, res) {
         try {
-            var userId = req.session.userId; // Get the userId from the session
+            const userId = req.session.userId;
             if (!userId) {
                 return res.status(401).json({
                     message: 'Unauthorized: No user logged in'
                 });
             }
-    
-            const user = await UserModel.findById(userId);
-            if (!user) {
-                return res.status(404).json({
-                    message: 'User not found'
-                });
-            }
-    
+
+            const { latitude, longitude } = req.body;
+
             var mailbox = new MailboxModel({
-                owner: user.username, // Store the username directly
-                last_opened: null 
+                owner: userId,
+                latitude: latitude,
+                longitude: longitude,
+                last_opened: null
             });
-    
-            const savedMailbox = await mailbox.save(); // Save the mailbox
-    
+
+            const savedMailbox = await mailbox.save();
             return res.status(201).json(savedMailbox);
         } catch (error) {
             return res.status(500).json({
@@ -85,7 +87,8 @@ module.exports = {
             });
         }
     },
-    
+
+
     /**
      * mailboxController.update()
      */
@@ -171,6 +174,28 @@ module.exports = {
         } catch (err) {
             return res.status(500).json({
                 message: 'Error when unlocking the mailbox.',
+                error: err
+            });
+        }
+    },
+
+    unlockHistory: async function (req, res) {
+        var id = req.params.id;
+
+        try {
+            const mailbox = await MailboxModel.findById(id);
+            if (!mailbox) {
+                return res.status(404).json({
+                    message: 'No such mailbox'
+                });
+            }
+
+            const unlockHistory = mailbox.unlock_history; // Pridobimo zgodovino odklepanja
+
+            return res.json(unlockHistory);
+        } catch (err) {
+            return res.status(500).json({
+                message: 'Error when getting unlock history.',
                 error: err
             });
         }

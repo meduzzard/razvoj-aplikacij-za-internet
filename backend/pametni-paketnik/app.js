@@ -6,7 +6,7 @@ var logger = require('morgan');
 var mongoose = require('mongoose');
 
 // Database connection
-var mongoDB = "mongodb://127.0.0.1/pametni-paketnik";
+var mongoDB = process.env.MONGO_URL || "mongodb://127.0.0.1/pametni-paketnik";
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.Promise = global.Promise;
 var db = mongoose.connection;
@@ -19,6 +19,7 @@ db.once('open', function() {
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/userRoutes');
 var mailboxesRouter = require('./routes/mailboxRoutes');
+var apiRouter = require('./routes/apiRoutes'); // Add this line
 
 // Initialize express app
 var app = express();
@@ -51,12 +52,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Session management
 var session = require('express-session');
-var MongoStore = require('connect-mongo');
+const MongoStore = require('connect-mongo');
 app.use(session({
   secret: 'work hard',
   resave: true,
   saveUninitialized: false,
-  store: MongoStore.create({ mongoUrl: mongoDB })
+  store: new MongoStore({
+    mongoUrl: mongoDB,
+    mongooseConnection: mongoose.connection
+  })
 }));
 
 // Custom middleware to make session available in views
@@ -69,6 +73,7 @@ app.use(function (req, res, next) {
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/mailboxes', mailboxesRouter);
+app.use('/api', apiRouter); // Add this line
 
 // Catch 404 and forward to error handler
 app.use(function(req, res, next) {
