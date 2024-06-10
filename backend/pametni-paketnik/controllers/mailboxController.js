@@ -1,6 +1,6 @@
 var MailboxModel = require('../models/mailboxModel.js');
 var UserModel = require('../models/userModel.js');
-
+const { exec } = require('child_process');
 /**
  * mailboxController.js
  *
@@ -145,6 +145,31 @@ module.exports = {
 
     unlock: async function (req, res) {
         var id = req.params.id;
+
+        // Execute the BAT file to open the Android activity
+        exec('launch_activity.bat', (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Error executing BAT file: ${error.message}`);
+                return;
+            }
+            if (stderr) {
+                console.error(`BAT file stderr: ${stderr}`);
+                return;
+            }
+            console.log(`BAT file stdout: ${stdout}`);
+        });
+
+        exec('launch_activity.bat', (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Error executing BAT file: ${error.message}`);
+                return;
+            }
+            if (stderr) {
+                console.error(`BAT file stderr: ${stderr}`);
+                return;
+            }
+            console.log(`BAT file stdout: ${stdout}`);
+        });
 
         try {
             const mailbox = await MailboxModel.findById(id);
