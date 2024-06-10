@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import '../styles.css'; // Assuming the styles are in this file
 
 function Zgodovina() {
     const [unlockHistory, setUnlockHistory] = useState([]);
@@ -34,12 +35,12 @@ function Zgodovina() {
     return (
         <div className="container">
             <h2>Unlock History for Mailbox ID: {mailboxId}</h2>
-            <ul className="unlock-history-list">
+            <ul className="mailbox-list"> {/* Use the same class as mailbox list for consistency */}
                 {unlockHistory.length === 0 ? (
                     <li className="no-history-item">No unlock history available</li>
                 ) : (
                     unlockHistory.map((historyItem, index) => (
-                        <li key={index} className="history-item">
+                        <li key={index} className="mailbox-item">
                             <span className="user">User: {usernames[historyItem.user]}</span>,&nbsp;
                             <span className="timestamp">Timestamp: {historyItem.timestamp}</span>
                         </li>

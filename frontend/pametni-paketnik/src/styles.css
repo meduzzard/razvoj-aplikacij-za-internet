@@ -15,7 +15,7 @@ body {
     border-radius: 8px;
 }
 
-h1 {
+h1, h2 {
     text-align: center;
     color: #333;
 }
@@ -93,7 +93,7 @@ label {
 }
 
 /* Styles for buttons */
-.primary-button, .secondary-button, .unlock-button {
+.primary-button, .secondary-button, .unlock-button, .history-button {
     padding: 10px 20px;
     border: none;
     border-radius: 4px;
@@ -131,6 +131,17 @@ label {
     background-color: #FF8C00;
 }
 
+.history-button {
+    padding: 5px 10px;
+    background-color: #4CAF50;
+    color: white;
+    margin-left: 10px;
+}
+
+.history-button:hover {
+    background-color: #45a049;
+}
+
 /* Additional styles for Profile component */
 .password-change-form {
     display: flex;
@@ -158,6 +169,10 @@ label {
     display: flex;
     align-items: center;
     margin-bottom: 10px;
+    padding: 10px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
 }
 
 /* Styles for Login component */
